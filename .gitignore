@@ -1,5 +1,8 @@
 #environment
 .env
 
+#logging
+.log
+
 #other files
 __pycache__/

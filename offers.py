@@ -1,6 +1,7 @@
 """Script containing the class responsible for parsing the offers 
 from the baseURL and a model of a Offer"""
 
+import logging
 from bs4 import BeautifulSoup, ResultSet
 from pydantic import BaseModel
 from pydantic_core import Url
@@ -21,17 +22,18 @@ class OffersParser():
     def __init__(self, base_url: str = "https://education.github.com/pack"):
         self.base_url = base_url
         self.result_offers = []
+        
+
+    def list_offers(self)-> list[Offer]:
+        logging.info(f"Parsing Github Education offers from {self.base_url}")
         for raw_offer in self._parse_offers():
             offer = self._parse_offer(raw_offer)
             self.result_offers.append(offer)
-
-
-    def list_offers(self)-> list[Offer]:
         return self.result_offers
     
 
     def _parse_offers(self)-> ResultSet:
-        soup = BeautifulSoup( requests.get(self.base_url,timeout=10).text, 'html.parser')
+        soup = BeautifulSoup(self._get_soup_markup() , 'html.parser')
         cards = soup.find_all('div', class_='pack-offer-card')
         return cards
 
@@ -75,3 +77,12 @@ class OffersParser():
             tag_name = list_item.find('span').text
             tag_names.append(tag_name)
         return tag_names
+    
+    def _get_soup_markup(self) -> str:
+        response = requests.get(self.base_url, timeout=10)
+        try:
+            response.raise_for_status()
+            logging.info(f"Scraped the target url {self.base_url}")
+        except:
+            logging.error(f"Error calling the scrap-target url {self.base_url}")
+        return response.text
